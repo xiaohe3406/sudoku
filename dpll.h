@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <list>
 #include <map>
 #include <sstream>
@@ -28,12 +28,12 @@ class AvAtom;
  */
 class Literal {
 public:
-	llu index;  
+	llu index;
 	bool neg;
 	CNF* cnf;
 	node<Clause>* cl;
 	node<Occur>* oc;
-	
+
 public:
 	Literal(CNF* _cnf, string s, bool _neg);
 	string str();
@@ -93,6 +93,7 @@ public:
 	vector<string> Atoms;
 	vector<ll> scheme;
 	llu AtomN = 0;
+	llu VarNum = 0;
 	slist<Clause> CL;
 	slist<AvAtom> AVA;
 	vector<node<AvAtom>*> avAtoms;
@@ -101,14 +102,17 @@ public:
 	rmRecorder<Occur> Rec_Occur;
 	rmRecorder<AvAtom> Rec_AvAtom;
 	stack<list<ll>> Rec_assign;
-	
+	bool Solve;
+
 public:
-	CNF() 
+	CNF()
 	{
 		this->CL.regRec(&this->Rec_Clause);
 		this->AVA.regRec(&this->Rec_AvAtom);
 	}
-	void read();
+	void read(string& filename);
+	void show();
+	void create(string& filename);
 	string str();
 	string occurStr();
 	string schemeStr();
@@ -122,4 +126,3 @@ public:
 	bool containEmptyClause = false;
 	bool DPLL(bool disableSimp);
 };
-

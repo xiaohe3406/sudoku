@@ -2,6 +2,7 @@
 #include "Global.h"
 #include "DPLLSolover.h"
 #include "Hanidoku.h"
+#include "dpll.h"
 
 
 //int main()
@@ -18,84 +19,89 @@
 
 
 int main(int argc, char* argv[]) {
-    
-    int choice = 0;
-    
-    while (true)
-    {
-        Start();
-        cin >> choice;
-        if (choice == 1) 
-        {
-            clock_t starttime, endtime;
-            starttime = clock();
-            Hanidoku hanidoku;
-            hanidoku.CreateRandomHanidoku();
-            hanidoku.PrintHanidoku();
-            hanidoku.SolveHanidoku();
-            hanidoku.PrintHanidoku();
-            endtime = clock();
-            cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;
 
-        }
-        else if (choice == 2)       //sat
-        {   
-            clock_t starttime, endtime;
+	int choice = 0;
 
-            string filename;
-            cout << "input the filename" << endl;
-            cin >> filename;
+	while (true)
+	{
+		Start();
+		cin >> choice;
+		if (choice == 1)
+		{
+			clock_t starttime, endtime;
+			starttime = clock();
+			Hanidoku hanidoku;
+			hanidoku.CreateRandomHanidoku();
+			hanidoku.PrintHanidoku();
+			hanidoku.SolveHanidoku();
+			hanidoku.PrintHanidoku();
+			endtime = clock();
+			cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;
 
-            starttime = clock();
+		}
+		else if (choice == 2)       //sat
+		{
+			clock_t starttime, endtime;
 
-            DPLLSolover solover(filename);
+			string filename;
+			cout << "input the filename" << endl;
+			cin >> filename;
 
-            endtime = clock();
+			starttime = clock();
 
-            solover.show();
+			//DPLLSolover solver(filename);
 
-            //测试
-            //cout<<"result: \n";
-            //starttime = clock();
-            //int value = dpll(list,result);
-            //endtime = clock();
-            //if(value) {
-            //    cout << "s " << true << endl;
-            //    show(result, varnum);//输出解
-            //}
-            //else {
-            //    cout << "s " << noanwser << endl;
-            //    cout<<"v "<<endl;
-            //}
-            //cout<<"t "<<(double)(endtime-starttime)/clocks_per_sec*1000.0<<" ms\n";
+			CNF solver;
+			solver.create(filename);
 
-             //写到文件
-            /*string suffix = ".txt";
-            string name = "solution";
-            string outputfile = name + suffix;
-            ofstream fos;
-            fos.open(outputfile, ios::out);
-            if (!fos.is_open()) 
-            {
-                cout << "can not open a new file.\n";
-                exit(1);
-            }*/
 
-            // 时间
-            cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;
-            // fos.close();
-        }
-        else if (choice == 0) // quit
-        {
-            break;
-        }
-        else 
-        { 
-            cout << "please input the right num! " << endl;
-        }
+			endtime = clock();
 
-        system("pause");
-        system("cls");
-    }
-    return 0;
+			solver.show();
+			
+
+			//测试
+			//cout<<"result: \n";
+			//starttime = clock();
+			//int value = dpll(list,result);
+			//endtime = clock();
+			//if(value) {
+			//    cout << "s " << true << endl;
+			//    show(result, varnum);//输出解
+			//}
+			//else {
+			//    cout << "s " << noanwser << endl;
+			//    cout<<"v "<<endl;
+			//}
+			//cout<<"t "<<(double)(endtime-starttime)/clocks_per_sec*1000.0<<" ms\n";
+
+			 //写到文件
+			/*string suffix = ".txt";
+			string name = "solution";
+			string outputfile = name + suffix;
+			ofstream fos;
+			fos.open(outputfile, ios::out);
+			if (!fos.is_open())
+			{
+				cout << "can not open a new file.\n";
+				exit(1);
+			}*/
+
+			// 时间
+			cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;
+			// fos.close();
+		}
+		else if (choice == 0) // quit
+		{
+			break;
+		}
+		else
+		{
+			cout << "please input the right num! " << endl;
+		}
+
+		system("pause");
+		system("cls");
+	}
+	return 0;
 }

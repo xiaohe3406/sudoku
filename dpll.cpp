@@ -1,11 +1,11 @@
 ﻿#include "dpll.h"
-
+#include "Global.h"
 
 /**
  * 子句构造函数
  * @param _cnf 所在公式，用于绑定删除记录器 Rec_Literal
  */
-Clause::Clause(CNF* _cnf)
+	Clause::Clause(CNF* _cnf)
 {
 	this->lt = new slist<Literal>();
 	this->cnf = _cnf;
@@ -17,7 +17,7 @@ Clause::Clause(CNF* _cnf)
  * @param _cnf 所在公式，用于绑定删除记录器 Rec_Occur
  * @param i 变量序号
  */
-AvAtom::AvAtom(CNF* _cnf, llu i) 
+AvAtom::AvAtom(CNF* _cnf, llu i)
 {
 	this->oc = new slist<Occur>();
 	this->cnf = _cnf;
@@ -31,12 +31,12 @@ AvAtom::AvAtom(CNF* _cnf, llu i)
  * @param s 文字标识符
  * @param _neg 是否为否定文字
  */
-Literal::Literal(CNF* _cnf, string s, bool _neg) 
+Literal::Literal(CNF* _cnf, string s, bool _neg)
 {
 	this->cnf = _cnf;
 	this->neg = _neg;
 	auto it = this->cnf->Dict.find(s);
-	if (it == this->cnf->Dict.end()) 
+	if (it == this->cnf->Dict.end())
 	{
 		this->cnf->Dict.insert(make_pair(s, this->cnf->AtomN));
 		this->cnf->Atoms.push_back(s);
@@ -77,7 +77,7 @@ void Literal::RemoveOccurrence()
  * 生成字句的字符串
  * 每个文字之间用“ ∨ ”分隔
  */
-string Clause::str() 
+string Clause::str()
 {
 	stringstream res;
 	for (auto it = this->lt->begin(); it != this->lt->end(); it = it->next())
@@ -102,15 +102,63 @@ string Clause::str()
  * 2 ^a c
  * 4 b ^t a c
  */
-void CNF::read()
+void CNF::read(string& filename)
 {
-	llu n;
-	cin >> n;
-	for (llu i = 0; i < n; i++) 
+	//FileOpen
+	string path = filename;
+	ifstream ifs;
+	ifs.open(path, ios::in);
+	if (!ifs)
+	{
+		cout << "File can not open.";
+		exit(1);
+	}
+
+	char ch;
+	char buf[100];
+	ifs >> ch;
+	while (ch != 'p')
+	{
+		ifs.getline(buf, 200);
+		ifs >> ch;
+	}
+	string cnf;
+	llu VarNum, ClauseNum;
+	ifs >> cnf >> VarNum >> ClauseNum;
+	ifs.get();
+	this->VarNum = VarNum;
+
+	for (llu i = 0; i < ClauseNum; i++)
+	{
+		this->CL.add(Clause(this));
+
+		int temp = 0;
+		ifs >> temp;
+		while (temp != 0)
+		{
+			string s = to_string(temp);
+			if(s[0] == '-')
+				this->CL.back()->lt->add(Literal(this, s.substr(1), true));
+			else
+				this->CL.back()->lt->add(Literal(this, s, false));
+			node<Literal>* tmp1 = this->CL.back()->lt->end()->prev();
+			this->avAtoms[this->CL.back()->lt->back()->index]->X->oc->add(
+				Occur(tmp1));
+			this->CL.back()->lt->back()->cl = this->CL.end()->prev();
+			this->CL.back()->lt->back()->oc =
+				this->avAtoms[this->CL.back()->lt->back()->index]
+				->X->oc->end()
+				->prev();
+
+			ifs >> temp;
+		}
+	}
+
+	/*for (llu i = 0; i < ClauseNum; i++)
 	{
 		this->CL.add(Clause(this));
 		llu tn;
-		cin >> tn;
+
 		for (llu j = 0; j < tn; j++)
 		{
 			string s;
@@ -128,7 +176,48 @@ void CNF::read()
 				->X->oc->end()
 				->prev();
 		}
+	}*/
+
+}
+
+void CNF::show()
+{
+	if (Solve == false)
+	{
+		std::cout << "S " << NoAnwser << endl;
+		std::cout << "V ";
+		std::cout << endl;
+		return;
 	}
+
+	// Solve == true
+	std::cout << "S " << true << std::endl;
+	std::cout << "V ";
+	for (llu i = 1; i <= VarNum; i++)
+	{
+		auto it = this->Dict.find(to_string(i));
+		if (it == this->Dict.end())
+		{
+			std::cout << i << " ";
+		}
+		else
+		{
+			llu index = it->second;
+			if (this->scheme[index] == 0)
+				std::cout << i << " ";
+			else if (this->scheme[index] == 1)
+				std::cout << i << " ";
+			else
+				std::cout << "-" << i << " ";
+		}
+	}
+	std::cout << std::endl;
+}
+
+void CNF::create(string& filename)
+{
+	this->read(filename);
+	this->DPLL(false);
 }
 
 /**
@@ -142,11 +231,11 @@ void CNF::read()
  * | ∧ a
  * }
  */
-string CNF::str() 
+string CNF::str()
 {
 	stringstream res;
 	res << "{\n";
-	for (auto it = this->CL.begin(); it != this->CL.end(); it = it->next()) 
+	for (auto it = this->CL.begin(); it != this->CL.end(); it = it->next())
 	{
 		res << "| ";
 		if (it != this->CL.begin())
@@ -200,7 +289,7 @@ string CNF::occurStr()
  * "d" -> True
  * 其中下划线表示该变量取 True 或 False 均可
  */
-string CNF::schemeStr() 
+ string CNF::schemeStr()
 {
 	stringstream res;
 	for (llu i = 0; i < this->AtomN; i++)
@@ -215,6 +304,27 @@ string CNF::schemeStr()
 		res << endl;
 	}
 	return res.str();
+
+	/*for (llu i = 1; i <= VarNum; i++)
+	{
+		auto it = this->Dict.find(to_string(i));
+		if (it == this->Dict.end())
+		{
+			std::cout << i << " ";
+		}
+		else
+		{
+			llu index = it->second;
+			if (this->scheme[index] == 0)
+				std::cout << i << " ";
+			else if (this->scheme[index] == 1)
+				std::cout << i << " ";
+			else
+				std::cout << "-" << i << " ";
+		}
+	}
+	std::cout << endl;*/
+
 }
 
 /**
@@ -224,8 +334,8 @@ string CNF::schemeStr()
  */
 void CNF::removeLiteral(node<Clause>* cl, node<Literal>* lit)
 {
-	std::cout << "DEL literal \"" << lit->X->str() << "\" in \"" << cl->X->str()
-		<< "\"" << endl;
+	// std::cout << "DEL literal \"" << lit->X->str() << "\" in \"" << cl->X->str()
+	//	<< "\"" << endl;
 	lit->X->RemoveOccurrence();
 	cl->X->lt->rm(lit);
 }
@@ -234,9 +344,9 @@ void CNF::removeLiteral(node<Clause>* cl, node<Literal>* lit)
  * 移除子句
  * @param cl 要移除的子句
  */
-void CNF::removeClause(node<Clause>* cl) 
+void CNF::removeClause(node<Clause>* cl)
 {
-	std::cout << "DEL Clause \"" << cl->X->str() << "\"" << endl;
+	//std::cout << "DEL Clause \"" << cl->X->str() << "\"" << endl;
 	for (auto lit = cl->X->lt->begin(); lit != cl->X->lt->end();
 		lit = lit->next())
 		lit->X->RemoveOccurrence();
@@ -258,7 +368,7 @@ ll CNF::AssignLiteralIn(node<Clause>* cl, node<Literal>* unit)
 	this->Rec_assign.top().push_back(unit->X->index);
 	bool changed = false;
 	for (auto it = cl->X->lt->begin(); it != cl->X->lt->end(); it = it->next())
-		if (it->X->index == unit->X->index) 
+		if (it->X->index == unit->X->index)
 		{
 			if (it->X->neg == unit->X->neg)
 			{
@@ -266,7 +376,7 @@ ll CNF::AssignLiteralIn(node<Clause>* cl, node<Literal>* unit)
 				this->removeClause(cl);
 				return 1;
 			}
-			else 
+			else
 			{
 				/**
 				 * cl 包含 unit 的否定出现（cl[]）
@@ -288,11 +398,11 @@ ll CNF::AssignLiteralIn(node<Clause>* cl, node<Literal>* unit)
  * 对公式进行一次单位子句传播（Unit Propagation）
  * @return 是否更改了公式
  */
-bool CNF::UnitPropagate() 
+bool CNF::UnitPropagate()
 {
 	bool ok = false;
 	for (auto it1 = this->CL.begin(); it1 != this->CL.end(); it1 = it1->next())
-		if (it1->X->lt->single()) 
+		if (it1->X->lt->single())
 		{
 			/* A=Phi[i] 是一个单位子句（unit clause）*/
 			node<Literal>* A = it1->X->lt->begin();
@@ -316,7 +426,7 @@ bool CNF::UnitPropagate()
 bool CNF::PureLiteralAssign()
 {
 	for (llu i = 0; i < this->AtomN; i++)
-		if (this->avAtoms[i]->X->oc->single()) 
+		if (this->avAtoms[i]->X->oc->single())
 		{
 			this->scheme[this->avAtoms[i]->X->index] =
 				this->avAtoms[i]->X->oc->begin()->X->lit->X->neg ? 2 : 1;
@@ -342,7 +452,7 @@ void CNF::nextLayer()
 /**
  * 让所有修改记录器回溯至上个修改层
  */
-void CNF::backtrack() 
+void CNF::backtrack()
 {
 	this->Rec_Literal.backtrack();
 	this->Rec_Clause.backtrack();
@@ -358,41 +468,41 @@ void CNF::backtrack()
  * 对公式进行DPLL算法（非递归实现）
  * @param disableSimp 禁用两个化简步骤
  */
-bool CNF::DPLL(bool disableSimp = false) 
+bool CNF::DPLL(bool disableSimp = false)
 {
 	stack<ll> STACK;
 	AvAtom* x;
 	ll layerNow = -1, Status;
 	STACK.push(0);
 	/* 0 => 不进行任何赋值 */
-	while (!STACK.empty()) 
+	while (!STACK.empty())
 	{
 		/*Status 的绝对值表示*/
 		Status = STACK.top();
 		STACK.pop();
-		std::cout << "=== NEW STATUS : " << Status << " ===" << endl;
+		//std::cout << "=== NEW STATUS : " << Status << " ===" << endl;
 
 		/* -------------------------------------------------------------------------- */
 		/*                                    回溯部分                                    */
 		/* -------------------------------------------------------------------------- */
 
 		/* 回溯至Status层之前，再建立新的修改层 */
-		while (layerNow >= abs(Status)) 
+		while (layerNow >= abs(Status))
 		{
 			layerNow--;
-			std::cout << "BACKTRACK: -> " << layerNow << endl;
+			//std::cout << "BACKTRACK: -> " << layerNow << endl;
 			this->backtrack();
 		}
 		layerNow = abs(Status);
-		std::cout << "FORMULA: begin processing(layer=" << layerNow
-			<< "):" << endl;
-		std::cout << this->str();
+		//std::cout << "FORMULA: begin processing(layer=" << layerNow
+		//	<< "):" << endl;
+		//std::cout << this->str();
 		this->nextLayer();
 
 		/* 第一遍循环时不赋值 */
 		if (Status == 0)
 		{
-			std::cout << "INIT: skip assignments" << endl;
+			//std::cout << "INIT: skip assignments" << endl;
 			goto SIMPLIFICATION;
 		}
 
@@ -401,8 +511,8 @@ bool CNF::DPLL(bool disableSimp = false)
 		/* -------------------------------------------------------------------------- */
 
 		x = this->AVA.begin()->X;
-		std::cout << "ASSIGN: \"" << Atoms[x->index] << "\" -> "
-			<< (Status > 0 ? "True" : "False") << endl;
+		//std::cout << "ASSIGN: \"" << Atoms[x->index] << "\" -> "
+		//	<< (Status > 0 ? "True" : "False") << endl;
 		this->scheme[x->index] = Status > 0 ? 1 : 2;
 		this->Rec_assign.top().push_back(x->index);
 
@@ -419,20 +529,20 @@ bool CNF::DPLL(bool disableSimp = false)
 				 * true，不对公式产生约束 */
 				 /* 将其所在子句删除 */
 				this->removeClause(it->X->lit->X->cl);
-			else 
+			else
 			{
 				/* 该出现与赋值类型相反，即赋值后该文字为 false，不对所在子句产生约束 */
 				/* 将该出现（文字）删除 */
 				this->removeLiteral(it->X->lit->X->cl, it->X->lit);
-				if (it->X->lit->X->cl->X->lt->empty()) 
+				if (it->X->lit->X->cl->X->lt->empty())
 				{
 					this->containEmptyClause = true;
 					break;
 				}
 			}
 		}
-		std::cout << "FORMULA: finish assignments:" << endl;
-		std::cout << this->str();
+		/*std::cout << "FORMULA: finish assignments:" << endl;
+		std::cout << this->str();*/
 
 		/* -------------------------------------------------------------------------- */
 		/*                                    化简部分                                    */
@@ -440,15 +550,15 @@ bool CNF::DPLL(bool disableSimp = false)
 	SIMPLIFICATION:
 		/* 进行两个化简操作 */
 		/* 1. 传播单位子句（Unit Propagatating）*/
-		if (!disableSimp) 
+		if (!disableSimp)
 		{
-			while (this->UnitPropagate()) { }
-			std::cout << "FORMULA: Unit-propagatated:" << endl;
-			std::cout << this->str();
+			while (this->UnitPropagate()) {}
+			/*std::cout << "FORMULA: Unit-propagatated:" << endl;
+			std::cout << this->str();*/
 			/* 2. 消去孤立文字（Pure Literal Assignment）*/
-			while (this->PureLiteralAssign()) { }
-			std::cout << "FORMULA: Pure-literal-assigned:" << endl;
-			std::cout << this->str();
+			while (this->PureLiteralAssign()) {}
+			/*std::cout << "FORMULA: Pure-literal-assigned:" << endl;
+			std::cout << this->str();*/
 		}
 
 
@@ -459,15 +569,16 @@ bool CNF::DPLL(bool disableSimp = false)
 		/* CNF公式集为空，必能满足 */
 		if (this->CL.empty())
 		{
-			std::cout << "***FORMULA IS EMPTY: It can be satisfied." << endl;
-			std::cout << "***ALGORITHM FINISHED." << endl;
+			/*std::cout << "***FORMULA IS EMPTY: It can be satisfied." << endl;
+			std::cout << "***ALGORITHM FINISHED." << endl;*/
+			Solve = true;
 			return true;
 		}
 		/* CNF公式集包含空子句，不可能满足 */
 		if (this->containEmptyClause)
 		{
-			std::cout << "***FORMULA CONTAIN EMPTY CLAUSES: backtrack." << endl
-				<< endl;
+			/*std::cout << "***FORMULA CONTAIN EMPTY CLAUSES: backtrack." << endl
+				<< endl;*/
 			this->containEmptyClause = false;
 			continue;
 		}
@@ -480,9 +591,10 @@ bool CNF::DPLL(bool disableSimp = false)
 		/* 处理完成，该分支并未被证实或证伪，将下一层的赋值选择推入栈 */
 		STACK.push(abs(Status) + 1);
 		STACK.push(-abs(Status) - 1);
-		std::cout << endl;
+		// std::cout << endl;
 	}
-	std::cout << "***The formula cannot be satisfied." << endl;
-	std::cout << "***ALGORITHM FINISHED." << endl;
+	/*std::cout << "***The formula cannot be satisfied." << endl;
+	std::cout << "***ALGORITHM FINISHED." << endl;*/
+	Solve = false;
 	return false;
 }

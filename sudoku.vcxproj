@@ -128,15 +128,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CnfParser.cpp" />
+    <ClCompile Include="dpll.cpp" />
     <ClCompile Include="DPLLSolver.cpp" />
     <ClCompile Include="Hanidoku.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Start.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dpll.h" />
     <ClInclude Include="DPLLSolover.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="Hanidoku.h" />
+    <ClInclude Include="slist.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

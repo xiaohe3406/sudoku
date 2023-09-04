@@ -30,6 +30,9 @@
     <ClCompile Include="Hanidoku.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="dpll.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Global.h">
@@ -39,6 +42,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Hanidoku.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="slist.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="dpll.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
