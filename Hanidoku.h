@@ -4,24 +4,39 @@
 
 class Hanidoku {
 public:
-    Hanidoku()
+    Hanidoku(int holes)
     {
         InitRow();
         InitLeftSlash();
         InitRightSlash();
         Init_hanidoku(hanidoku);
+        Init_hanidoku(FinishedHanidoku);
+
+        CreateRandomHanidoku(holes);
+        SolveHanidoku();   // generate a completed hanidoku
     }
 
-    bool CreateRandomHanidoku(int);
-    void CreateRandomHanidoku();
-    void PrintHanidoku();    
+    // generate hanidoku
+    bool CreateRandomHanidoku(int,int);
+    void CreateRandomHanidoku(int );
+    // choice==0 print uncompleted hanidoku ,  choice==1 print completed hanidoku 
+    void PrintHanidoku(int choice);
+    // interact with the user
+    void Interact();
+    // if num is the right answer , return 1
+    // if num is the wrong answer, return 0
+    // if hanidoku is completed, return -1
+    int Interact(int row, int col, int num);          
+    // solve hanidoku
     bool SolveHanidoku();
     
 private:
-    // 将约束条件转化为cnf
+    // generate cnf from hanidoku
     void ToCnf();
-    // 得到初盘
-    void GetBoard(string filename);
+    // get the umcompleted hanidoku
+    void GetBoard();
+    // dig the holes
+    void Dig(int holes);
 
     void AddHeadcontent();
     // 提示数字约束
@@ -33,15 +48,15 @@ private:
     void GenerateLeftSlashClause(ofstream& ofs);
     void GenerateRightSlashClause(ofstream& ofs);
 
-    // 从solution.txt文件中读取结果
+    // get the result from file solution.txt
     bool GetResult(string filename);
 
-    // 初始化一些数组
+    // initialize some vector
     void InitRow();
     void InitLeftSlash();
     void InitRightSlash();
-
-    // 将hanidoku的元素设置正确
+  
+    // set the right element for every cellular of the hanidoku
     void Init_hanidoku(std::vector<std::vector<Cellular>>& Hanidoku);   
     
     bool check(int value, int row, int col);
@@ -51,13 +66,17 @@ private:
 
 private:
 
-    int ClauseNum;
-
-    int holes;    // 洞的个数
-
-    int size[9] = { 5, 6, 7, 8, 9, 8, 7, 6, 5 }; // 蜂窝每行的蜂窝数
+    // the number of clauses that generated from the hanidoku
+    int ClauseNum;   
+    // the number of holes in hanidoku
+    int holes;    
+    // size of every row 
+    int size[9] = { 5, 6, 7, 8, 9, 8, 7, 6, 5 }; 
     
-    std::vector<std::vector<Cellular>> hanidoku;    //蜂窝数独盘
+    // hanidoku
+    std::vector<std::vector<Cellular>> hanidoku;    
+    // completed hanidoku
+    std::vector<std::vector<Cellular>> FinishedHanidoku;    
 
     std::vector<std::vector<std::pair<int, int>>> Row;// 左->右
 

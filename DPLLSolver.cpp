@@ -91,44 +91,95 @@ HeadNode* DPLLSolover::AddSingleClause(HeadNode* LIST,int Var)
     return LIST;
 }
 
-void DPLLSolover::DeleteDataNode(int temp,HeadNode* &LIST)
+void DPLLSolover::DeleteDataNode(int temp, HeadNode* &LIST)
 {
-    for (HeadNode* pHeadNode = LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down)
-        for (DataNode* rear = pHeadNode->right; rear != nullptr ; rear = rear->next) 
+    HeadNode* pHeadNode = LIST;
+    while (pHeadNode != nullptr)
+    {
+        int flag1 = 0;
+        DataNode* rear = pHeadNode->right;
+        while (rear != nullptr)
         {
-            if (rear->data == temp)  // 相等删除整行
-                DeleteHeadNode(pHeadNode,LIST);
-            else if (rear->data == -temp)  // 互为相反数则删除单个Data
-            { 
-                if(rear == pHeadNode->right) 
+            int flag2 = 0;
+            if (rear->data == temp)     // 相等删除整行
+            {
+                DeleteHeadNode(pHeadNode, LIST);
+                flag1 = 1;
+                break;
+            }
+            else if (rear->data == -temp)      // 互为相反数则删除单个Data
+            {
+                if (rear == pHeadNode->right)
                 {
-                    // 头节点删除
-                    //DataNode* DeleteData = rear;
-                    pHeadNode->right = rear->next;
+                    //cout << "delete " << rear->data << endl;
+                    DataNode* DeleteData = rear;
+                    rear = rear->next;
+                    flag2 = 1;
+                    pHeadNode->right = DeleteData->next;
                     pHeadNode->Num--;
-                    //free(DeleteData);
+                    free(DeleteData);
                 }
                 else
-                { 
-                    // 删除普通节点
-                    for (DataNode* front = pHeadNode->right; front != nullptr; front= front->next)
-                        if(front->next == rear)
+                {
+                    for (DataNode* front = pHeadNode->right; front != nullptr; front = front->next)
+                        if (front->next == rear)
                         {
-                            //DataNode* DeleteData = rear;
+                            DataNode* DeleteData = rear;
                             front->next = rear->next;
+                            rear = rear->next;
+                            flag2 = 1;
                             pHeadNode->Num--;
-                            //free(DeleteData);
+                            free(DeleteData);
+                            break;
                         }
                 }
             }
+            if(flag2 != 1)
+               rear = rear->next;
         }
+        if(flag1 != 1)
+           pHeadNode = pHeadNode->down;
+    }
+
+    //for (HeadNode* pHeadNode = LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down)
+    //    for (DataNode* rear = pHeadNode->right; rear != nullptr ; rear = rear->next) 
+    //    {
+    //        if (rear->data == temp)  // 相等删除整行
+    //        {
+    //            DeleteHeadNode(pHeadNode, LIST);
+    //            break;
+    //        }
+    //        else if (rear->data == -temp)  // 互为相反数则删除单个Data
+    //        { 
+    //            if(rear == pHeadNode->right) 
+    //            {
+    //                // 头节点删除
+    //                //DataNode* DeleteData = rear;
+    //                pHeadNode->right = rear->next;
+    //                pHeadNode->Num--;
+    //                //free(DeleteData);
+    //            }
+    //            else
+    //            { 
+    //                // 删除普通节点
+    //                for (DataNode* front = pHeadNode->right; front != nullptr; front= front->next)
+    //                    if(front->next == rear)
+    //                    {
+    //                        //DataNode* DeleteData = rear;
+    //                        front->next = rear->next;
+    //                        pHeadNode->Num--;
+    //                        //free(DeleteData);
+    //                    }
+    //            }
+    //        }
+    //    }
 }
 
-void DPLLSolover::DeleteHeadNode(HeadNode *Clause,HeadNode* &LIST)
+void DPLLSolover::DeleteHeadNode(HeadNode *&Clause,HeadNode* &LIST)
 {
     if (!Clause) return;
     if (Clause == LIST)
-    {
+    {    
         LIST = Clause->down;
     }
     else 
@@ -140,15 +191,18 @@ void DPLLSolover::DeleteHeadNode(HeadNode *Clause,HeadNode* &LIST)
             }
     }
 
+    HeadNode* tempHeadNode = Clause;
+    Clause = Clause->down;
+
     // free链表Clause内存
-    /*DataNode* temp = Clause->right;
+    DataNode* temp = tempHeadNode->right;
     while (temp)
     {
         DataNode* temp1 = temp;
         temp = temp->next;
         free(temp1);
     }
-    free(Clause);*/
+    free(tempHeadNode);
 }
 
 void DPLLSolover::show() 
@@ -182,6 +236,7 @@ void DPLLSolover::SaveToFile(string filename)
     if (!ofs.is_open())
     {
         cout << "Fail to open file " << filename << "." << endl;
+        return;
     }
 
     if (value == false)
@@ -231,6 +286,45 @@ void DPLLSolover::ShowHanidokuResult()
     cout << endl;
 }
 
+int DPLLSolover::chooseVarible(HeadNode* LIST)
+{
+    int min = INT16_MAX;
+    // MOM  最短子句的出现次数最多的文字
+    for (HeadNode* pHead = LIST; pHead != nullptr; pHead = pHead->down)
+    {
+        if (pHead->Num < min)
+        {
+            min = pHead->Num;
+        }
+    }
+
+    std::unordered_map<int, int> count;
+    for (HeadNode* pHead = LIST; pHead != nullptr; pHead = pHead->down)
+    {
+        // 最短子句
+        if (pHead->Num == min)
+        {
+            for (DataNode* rear = pHead->right; rear != nullptr; rear = rear->next)
+            {
+                count[rear->data]++;
+            }
+            break;
+        }
+    }
+
+    int maxCount = 0;
+    int selectValue = 0;
+    for (const auto& entry : count)
+    {
+        if (entry.second > maxCount) 
+        {
+            maxCount = entry.second;
+            selectValue = entry.first;
+        }
+    }
+    return selectValue;
+}
+
 bool DPLLSolover::DPLL(HeadNode *LIST,consequence *result)
 {
     //单子句规则
@@ -239,6 +333,7 @@ bool DPLLSolover::DPLL(HeadNode *LIST,consequence *result)
     while (SingleClause != nullptr) // 找到单子句
     {
         SingleClause->right->data > 0 ? result[abs(SingleClause->right->data)-1].value = TRUE : result[abs(SingleClause->right->data)-1].value = FALSE;
+
         int temp = SingleClause->right->data;
         
         DeleteHeadNode(SingleClause, LIST);      // 删除单子句这一行
@@ -250,9 +345,12 @@ bool DPLLSolover::DPLL(HeadNode *LIST,consequence *result)
         Pfind = LIST;
         SingleClause = IsSingleClause(Pfind);   // 回到头节点继续进行检测是否有单子句
     }
+
+    //cout << "DPLL work" << endl;
     
     // 分裂策略
-    int Var = LIST->right->data;    // 选取变元
+    // int Var = chooseVarible(LIST);    // 选取变元
+    int Var = LIST->right->data;
     HeadNode* replica = Copy(LIST);     // 存放LIST的副本replica
     HeadNode* temp1 = AddSingleClause(LIST, Var);    // 装载变元成为单子句
     if(DPLL(temp1, result)) return TRUE;
@@ -260,5 +358,41 @@ bool DPLLSolover::DPLL(HeadNode *LIST,consequence *result)
     {
         HeadNode *temp2 = AddSingleClause(replica, -Var);
         return DPLL(temp2, result);
+    }
+}
+
+bool DPLLSolover::BetterDPLL(HeadNode* LIST, consequence* result)
+{
+    //单子句规则
+    HeadNode* Pfind = LIST;
+    HeadNode* SingleClause = IsSingleClause(Pfind);
+    while (SingleClause != nullptr) // 找到单子句
+    {
+        SingleClause->right->data > 0 ? result[abs(SingleClause->right->data) - 1].value = TRUE : result[abs(SingleClause->right->data) - 1].value = FALSE;
+
+        int temp = SingleClause->right->data;
+
+        //cout << "deal with " << temp << endl;
+        DeleteHeadNode(SingleClause, LIST);      // 删除单子句这一行
+        DeleteDataNode(temp, LIST);      // 删除相等或相反数的节点
+
+        if (!LIST) return true;
+        else if (IsEmptyClause(LIST)) return false;
+
+        Pfind = LIST;
+        SingleClause = IsSingleClause(Pfind);   // 回到头节点继续进行检测是否有单子句
+    }
+
+
+    // 分裂策略
+    int Var = chooseVarible(LIST);    // 选取变元
+    // int Var = LIST->right->data;
+    HeadNode* replica = Copy(LIST);     // 存放LIST的副本replica
+    HeadNode* temp1 = AddSingleClause(LIST, Var);    // 装载变元成为单子句
+    if (BetterDPLL(temp1, result)) return TRUE;
+    else
+    {
+        HeadNode* temp2 = AddSingleClause(replica, -Var);
+        return BetterDPLL(temp2, result);
     }
 }

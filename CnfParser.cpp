@@ -2,7 +2,7 @@
 #include "DPLLSolover.h"
 
 
-HeadNode* DPLLSolover::CreateClause(int &VARNUM, string &filename)
+HeadNode* DPLLSolover::CreateClause(string &filename)
 {
     //FileOpen
     string path = filename;
@@ -11,7 +11,7 @@ HeadNode* DPLLSolover::CreateClause(int &VARNUM, string &filename)
     if(!ifs)
     {
         cout<<"File can not open.";
-        exit(1);
+        return nullptr;
     }
 
     char ch;
@@ -26,6 +26,9 @@ HeadNode* DPLLSolover::CreateClause(int &VARNUM, string &filename)
     int VarNum, ClauseNum;
     ifs >> cnf >> VarNum >> ClauseNum;
     ifs.get();
+
+    this->VarNum = VarNum;
+
 
     // write into 2 dimensional link lists
     // loading the initial node
@@ -77,8 +80,6 @@ HeadNode* DPLLSolover::CreateClause(int &VARNUM, string &filename)
         cout << 0 << endl;
         Phead = Phead->down;
     }*/
-
-    VARNUM = VarNum;
 
     ifs.close();
     return HEAD;

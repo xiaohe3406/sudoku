@@ -2,24 +2,13 @@
 #include "Global.h"
 #include "DPLLSolover.h"
 #include "Hanidoku.h"
-#include "dpll.h"
+#include "cnfParser.h"
+#include "DPLL_CDCL.h"
+#include "common.h"
 
 
-//int main()
-//{
-//	Hanidoku test;
-//	cout << "开始 " << endl;
-//	system("pause");
-//	test.GenerateClause();
-//	cout << "finish "  << endl;
-//	
-//	
-//	return 0;
-//}
-
-
-int main(int argc, char* argv[]) {
-
+int main(int argc, char* argv[]) 
+{
 	int choice = 0;
 
 	while (true)
@@ -28,64 +17,75 @@ int main(int argc, char* argv[]) {
 		cin >> choice;
 		if (choice == 1)
 		{
+			int i = 0;
 			clock_t starttime, endtime;
 			starttime = clock();
-			Hanidoku hanidoku;
-			hanidoku.CreateRandomHanidoku();
-			hanidoku.PrintHanidoku();
-			hanidoku.SolveHanidoku();
-			hanidoku.PrintHanidoku();
+			cout << "Please input the number of holes" << endl;
+			int holes;
+			cin >> holes;
+			Hanidoku hanidoku(holes);
+			hanidoku.PrintHanidoku(0);
+			cout << "Please input your choice." << endl;
+			cout << " 1) Interact     2) Get the result    0) quit" << endl;
+			cin >> i;
+			if (i == 1)
+			{
+				hanidoku.Interact();
+			}
+
+			if (i == 2)
+			{
+				hanidoku.PrintHanidoku(1);
+			}
+
+			if (i == 0)
+			{
+				continue;
+			}
+				
 			endtime = clock();
-			cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;
+			//cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;
 
 		}
 		else if (choice == 2)       //sat
 		{
 			clock_t starttime, endtime;
 
+			cout << "1) DPLL		2) DPLL_CDCL" << endl;
+			cout << "Input your choice" << endl;
+ 			int k;
+			cin >> k;
+
 			string filename;
 			cout << "input the filename" << endl;
 			cin >> filename;
 
+			string path = filename;
+			ifstream ifs;
+			ifs.open(path, ios::in);
+			if (!ifs)
+			{
+				cout << "File can not open." << endl << endl;
+				continue;
+			}
+			ifs.close();
+
 			starttime = clock();
 
-			//DPLLSolover solver(filename);
-
-			CNF solver;
-			solver.create(filename);
-
-
-			endtime = clock();
-
-			solver.show();
-			
-
-			//测试
-			//cout<<"result: \n";
-			//starttime = clock();
-			//int value = dpll(list,result);
-			//endtime = clock();
-			//if(value) {
-			//    cout << "s " << true << endl;
-			//    show(result, varnum);//输出解
-			//}
-			//else {
-			//    cout << "s " << noanwser << endl;
-			//    cout<<"v "<<endl;
-			//}
-			//cout<<"t "<<(double)(endtime-starttime)/clocks_per_sec*1000.0<<" ms\n";
-
-			 //写到文件
-			/*string suffix = ".txt";
-			string name = "solution";
-			string outputfile = name + suffix;
-			ofstream fos;
-			fos.open(outputfile, ios::out);
-			if (!fos.is_open())
+			if (k == 2)
 			{
-				cout << "can not open a new file.\n";
-				exit(1);
-			}*/
+				formula phi = cnfParser::parse(filename);
+				DPLL_CDCL solver(phi);
+				bool sat = solver.check_sat();
+				endtime = clock();
+				solver.ShowResult(sat);
+			}
+			if (k == 1)
+			{
+				DPLLSolover solver(filename, 2);
+				endtime = clock();
+				solver.show();
+			}
 
 			// 时间
 			cout << "t " << (double)(endtime - starttime) / CLOCKS_PER_SEC * 1000.0 << " ms" << endl;

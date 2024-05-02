@@ -1,7 +1,7 @@
 #include "Global.h"
 #include "Hanidoku.h"
 
-bool Hanidoku::CreateRandomHanidoku(int empty)
+bool Hanidoku::CreateRandomHanidoku(int occupy, int occupy2)
 {
 	for (int i = 0; i < 9; i++)
 	{
@@ -26,7 +26,7 @@ bool Hanidoku::CreateRandomHanidoku(int empty)
 	std::default_random_engine e;
 	e.seed(time(0));
 
-	int count = 41;
+	int count = 61;
 	while (count > 0)
 	{
 		std::uniform_int_distribution<int> u(0, 8);
@@ -52,6 +52,7 @@ bool Hanidoku::CreateRandomHanidoku(int empty)
 		}
 
 	}
+	Dig(30);  // 挖洞
 	return true;
 }
 
@@ -182,36 +183,208 @@ bool Hanidoku::check(int value, int row, int col)
 
 
 
-void Hanidoku::CreateRandomHanidoku()
+void Hanidoku::CreateRandomHanidoku(int hole)
 {
-	string filename = "D:\\work\\sudoku\\Hanidoku\\Hanidoku5.txt";
-	GetBoard(filename);
+	this->holes = hole;
+	GetBoard();
+	Dig(hole);
 }
 
-void Hanidoku::PrintHanidoku()
+void Hanidoku::PrintHanidoku(int choice)
 {
-	for (int i = 0; i < 9; i++)
+	std::cout << "--------------------------------------" << endl;
+	
+	for (int i = 0; i < 5; i++)
 	{
+		// 输出上半部分格子
+		// 输出空格 8 6 4 2 0
+		for (int count = 0; count < 8 - 2 * i; count++)
+			cout << " ";
+
+		//  5 6 7 8 9
+		for (int count = 0; count < 5 + i; count++)
+			cout << " / \\";
+		cout << endl;
+
+		// 输出中间部分
+		// 输出空格 8 6 4 2 0
+		for (int count = 0; count < 8 - 2 * i; count++)
+			cout << " ";
+		cout << "|";
 		for (int j = 0; j < size[i]; j++)
 		{
-			std::cout << hanidoku[i][j].num << " ";
+			if (choice == 1)
+			{
+				if (FinishedHanidoku[i][j].num == 0)
+					cout << " . |";
+				else
+					cout << " " << FinishedHanidoku[i][j].num << " |";
+			}
+			else
+			{
+				if (hanidoku[i][j].num == 0)
+					cout << " . |";
+				else
+					cout << " " << hanidoku[i][j].num << " |";
+			}
 		}
-		std::cout << std::endl;
+		cout << endl;
+
 	}
+	cout << " \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ /" << endl;
+	for (int i = 5; i < 9; i++)
+	{
+		// 输出中间部分
+		// 输出空格 2 4 6 8
+		for (int count = 0; count < 2 * (i - 4); count++)
+			cout << " ";
+		cout << "|";
+		// 输出数字
+		for (int j = 0; j < size[i]; j++)
+		{
+			if (choice == 1)
+			{
+				if (FinishedHanidoku[i][j].num == 0)
+					cout << " . |";
+				else
+					cout << " " << FinishedHanidoku[i][j].num << " |";
+			}
+			else
+			{
+				if (hanidoku[i][j].num == 0)
+					cout << " . |";
+				else
+					cout << " " << hanidoku[i][j].num << " |";
+			}
+		}
+		cout << endl;
+
+		// 输出下半部分
+		// 输出空格 3 5 7 9
+		for (int count = 0; count < 3 + 2 * (i - 5); count++)
+			cout << " ";
+		// 8 7 6 5
+		for (int count = 0; count < 13 - i; count++)
+			cout << "\\ / ";
+		cout << endl;
+	}
+
+	std::cout << "--------------------------------------" << endl;
 	std::cout << std::endl;
+
+
+}
+
+void Hanidoku::Interact()
+{
+	cout << "Input the index and the num like (row, col, num).  If you want to quit, input 0 0 0.  " ;
+	cout << "If you want to get the result, input 9 9 9." << endl;
+	int row, col, num;
+	cin >> row >> col >> num;
+	if (row == 0 && col == 0 && num == 0)
+	{
+		return ;
+	}
+	if (row == 9 && col == 9 && num == 9)
+	{
+		PrintHanidoku(1);
+		return;
+	}
+	while (true)
+	{
+		int flag = Interact(row, col, num);
+		if (flag == 1)
+		{
+			PrintHanidoku(0);
+			cout << "Input the index and the num like (row, col, num).  If you want to quit, input 0 0 0.  ";
+			cout << "If you want to get the result, input 9 9 9." << endl;
+			cin >> row >> col >> num;
+			if (row == 0 && col == 0 && num == 0)
+			{
+				return ;
+			}
+			if (row == 9 && col == 9 && num == 9)
+			{
+				PrintHanidoku(1);
+				return;
+			}
+		}
+		else if(flag == 0)
+		{
+			cout << "Input the index and the num like (row, col, num).  If you want to quit, input 0 0 0.  ";
+			cout << "If you want to get the result, input 9 9 9." << endl;
+			cin >> row >> col >> num;
+			if (row == 0 && col == 0 && num == 0)
+			{
+				return ;
+			}
+			if (row == 9 && col == 9 && num == 9)
+			{
+				PrintHanidoku(1);
+				return;
+			}
+		}
+		else if(flag == -1)
+		{
+			PrintHanidoku(1);
+			cout << "You have finished it." << endl;
+			break;
+		}
+	}
+	return ;
+}
+
+int Hanidoku::Interact(int row, int col, int num)
+{
+	// 处理错误行列输入
+	if (row < 1 || row > 9)
+	{
+		cout << "Input the right num." << endl;
+		return 0;
+	}
+	else if (col < 1 || col > size[row - 1])
+	{
+		cout << "Input the right col." << endl;
+		return 0;
+	}
+	if (hanidoku[row - 1][col - 1].num != 0)
+	{
+		// 已经填了
+		cout << "This one has been completed." << endl;
+		return 0;
+	}
+
+	if (FinishedHanidoku[row - 1][col - 1].num != num)
+	{
+		cout << "The number is wrong." << endl;
+		return 0;
+	}
+	else
+	{
+		cout << "The number is right." << endl;
+		hanidoku[row - 1][col - 1].num = num;
+		this->holes--;
+		if (this->holes == 0)
+		{
+			return -1;
+		}
+		return 1;
+	}
+
+	
+
+	return 0;
 }
 
 void Hanidoku::ToCnf()
 {
 	ClauseNum = 0;
-	string suffix = ".cnf";
-	string name = "sudoku";
-	string Outputfile = name + suffix;
+	string Outputfile = "sudoku.cnf";
 	ofstream ofs;
 	ofs.open(Outputfile, ios::out | ios::in);
 	if (!ofs.is_open())
 	{
-		cout << "fail to open file" << endl;
+		cout << "Fail to open file" << Outputfile <<  endl;
 		return;
 	}
 
@@ -227,8 +400,14 @@ void Hanidoku::ToCnf()
 
 }
 
-void Hanidoku::GetBoard(string filename)
+void Hanidoku::GetBoard()
 {
+	std::default_random_engine e;
+	e.seed(time(0));
+	std::uniform_int_distribution<int> u(1, 18);
+	
+	string filename = "Hanidoku\\Hanidoku" + to_string(u(e)) + ".txt";
+
 	ifstream ifs(filename);
 	if (!ifs.is_open())
 	{
@@ -242,8 +421,33 @@ void Hanidoku::GetBoard(string filename)
 		{
 			ifs >> temp;
 			hanidoku[row][col].num = temp;
+			FinishedHanidoku[row][col].num = temp;
 		}
 	}
+}
+
+void Hanidoku::Dig(int holes)
+{
+	std::default_random_engine e;
+	e.seed(time(0));
+
+	int i, j;
+
+	while (holes)
+	{
+		std::uniform_int_distribution<int> u(0, 8);
+		i = u(e);
+		std::uniform_int_distribution<int> v(0, size[i] - 1);
+		j = v(e);
+
+		if (this->hanidoku[i][j].num != 0)
+		{
+			hanidoku[i][j].num = 0;
+			FinishedHanidoku[i][j].num = 0;
+			holes--;
+		}
+	}
+
 }
 
 bool Hanidoku::GetResult(string filename)
@@ -272,7 +476,7 @@ bool Hanidoku::GetResult(string filename)
 		{
 			ifs >> tempNum;
 			tempNum = tempNum % 10;
-			hanidoku[i][j].num = tempNum;
+			FinishedHanidoku[i][j].num = tempNum;
 		}
 	}
 
@@ -283,8 +487,8 @@ bool Hanidoku::GetResult(string filename)
 bool Hanidoku::SolveHanidoku()
 {
 	ToCnf();
-	DPLLSolover solver("D:\\work\\sudoku\\sudoku.cnf");
-	string filename = "D:\\work\\sudoku\\solution.txt";
+	DPLLSolover solver("sudoku.cnf", 2);
+	string filename = "solution.txt";
 	solver.SaveToFile(filename);
 	bool i = GetResult(filename);
 	if (i) return true;
@@ -295,14 +499,12 @@ bool Hanidoku::SolveHanidoku()
 
 void Hanidoku::AddHeadcontent()
 {
-	string suffix = ".cnf";
-	string name = "sudoku";
-	string Outputfile = name + suffix;
+	string Outputfile = "sudoku.cnf";
 	ifstream ifs;
 	ifs.open(Outputfile, ios::in);
 	if (!ifs.is_open())
 	{
-		cout << "fail to open file" << endl;
+		cout << "Fail to open file" << Outputfile <<  endl;
 		return;
 	}
 

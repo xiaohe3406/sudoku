@@ -9,6 +9,8 @@
 #include <random>
 #include <string>
 #include <iterator>
+#include <map>
+#include <unordered_map>
 
 using namespace std;
 #define TRUE 1
@@ -17,11 +19,13 @@ using namespace std;
 #define EMPTY 0
 typedef int status;
 
+// store the literal
 typedef struct DataNode {
     int data = 0;
     DataNode *next{};
 }DataNode;
 
+// store the clause
 typedef struct HeadNode {
     int Num = 0;
     DataNode *right{};
@@ -29,20 +33,22 @@ typedef struct HeadNode {
 }HeadNode;
 
 struct consequence {
-    int value = -1;//存真值 真时为true-1，假时为false-0
+    int value = -1;     // true - 1  false - 0
 };
 
 struct conse {
     int num = 0;
-    int value = -1;//存真值 真时为true-1，假时为false-0
+    int value = -1;     // true - 1  false - 0 
 };
 
+// a cellular of the hanidoku
 typedef struct {
-    int num;    // 蜂窝数字
-    int row;    // 蜂窝行数
-    int left_slash;     // 蜂窝在第left_slash条左斜线
-    int right_slash;    // 蜂窝在第right_slash条右斜线
+    int num;    
+    int row;    // row
+    int left_slash;     // the cellular is in the left_slash-th left slash
+    int right_slash;    // the cellular is in the right_slash-th right slash
 }Cellular;
+
 
 void Start();
 
